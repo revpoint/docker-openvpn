@@ -7,9 +7,18 @@ LABEL maintainer="Kyle Manna <kyle@kylemanna.com>"
 
 # Testing: pamtester
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && \
-    apk add --update openvpn iptables bash easy-rsa openvpn-auth-pam google-authenticator pamtester && \
+    apk add --update openvpn iptables bash easy-rsa openvpn-auth-pam \
+        python3 py3-pip google-authenticator libqrencode pamtester && \
     ln -s /usr/share/easy-rsa/easyrsa /usr/local/bin && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*
+
+# Run pip install with build deps
+RUN apk add --no-cache --virtual .build-deps \
+    build-base openssl-dev pkgconfig python3-dev libffi-dev && \
+    pip3 install --no-cache-dir \
+    adal requests pyyaml backports.pbkdf2 && \
+    apk del .build-deps
 
 # Needed by scripts
 ENV OPENVPN /etc/openvpn

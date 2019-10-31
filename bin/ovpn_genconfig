@@ -92,6 +92,7 @@ usage() {
     echo
     echo "optional arguments:"
     echo " -2    Enable two factor authentication using Google Authenticator."
+    echo " -A    Enable Azure Active Directory authentication."
     echo " -a    Authenticate  packets with HMAC using the given message digest algorithm (auth)."
     echo " -b    Disable 'push block-outside-dns'"
     echo " -c    Enable client-to-client option"
@@ -172,7 +173,7 @@ OVPN_TLS_CIPHER=''
 [ -r "$OVPN_ENV" ] && source "$OVPN_ENV"
 
 # Parse arguments
-while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
+while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:A:tz2" opt; do
     case $opt in
         a)
             OVPN_AUTH="$OPTARG"
@@ -249,6 +250,9 @@ while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
             ;;
         2)
             OVPN_OTP_AUTH=1
+            ;;
+        A)
+            OVPN_AZURE_AUTH=1
             ;;
         f)
             OVPN_FRAGMENT="$OPTARG"
@@ -380,6 +384,13 @@ done
 
 echo -e "\n### Push Configurations Below" >> "$conf"
 cat $TMP_PUSH_CONFIGFILE >> "$conf"
+
+# Append optional OTP authentication support
+if [ -n "${OVPN_AZURE_AUTH:-}" ]; then
+    echo -e "\n\n# Enable Azure AD for user authentication" >> "$conf"
+    echo "auth-user-pass-verify ovpn_azure_ad_auth via-env" >> "$conf"
+    echo "script-security 3 execve" >> "$conf"
+fi
 
 # Append optional OTP authentication support
 if [ -n "${OVPN_OTP_AUTH:-}" ]; then
