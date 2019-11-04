@@ -92,7 +92,7 @@ tls-auth ta.key 1
         echo "auth $OVPN_AUTH"
     fi
 
-    if [ -n "$OVPN_OTP_AUTH" ]; then
+    if [ -n "$OVPN_OTP_AUTH" ] || [ "$OVPN_AZURE_AD_AUTH" == "1" ] ; then
         echo "auth-user-pass"
         echo "auth-nocache"
     fi

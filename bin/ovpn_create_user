@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#
+# Creates an AD user with OTP and emails the config
+#
+
+if ! source "$OPENVPN/ovpn_env.sh"; then
+    echo "Could not source $OPENVPN/ovpn_env.sh."
+    exit 1
+fi
+if [ -z "$EASYRSA_PKI" ]; then
+    export EASYRSA_PKI="$OPENVPN/pki"
+fi
+
+email=$1
+
+if [ -z $email ]; then
+    echo "Usage: ovpn_create_user EMAIL"
+    exit 1
+fi
+
+set -e
+
+[ ! -f "$EASYRSA_PKI/private/${email}.key" ] && easyrsa build-client-full "$email" nopass
+ovpn_getclient "$email" combined-save
+
+client_config="$OPENVPN/clients/$email/${email}-combined.ovpn"
+if [ ! -f "$client_config" ]; then
+    echo "Unable to find \"${client_config}\", please try again or generate client first" >&2
+    exit 1
+fi
+
+otp=$(ovpn_otp_user "$email" 2>&1)
+
+if [ -n $OVPN_SMTP_URL ]; then
+    subject="OpenVPN config for $OVPN_CN"
+    body=$(cat <<EOF
+This email contains your OVPN configuration file.
+
+-----------------------------
+
+Use the following one-time password instructions with an authenticator app before connecting.
+EOF
+)
+    body=$(echo -e "$body\n\n$otp")
+
+    args=""
+    args="$args -s \"$subject\""
+    args="$args -e \"set smtp_url=$OVPN_SMTP_URL\""
+    [ -n $OVPN_FROM_EMAIL ] && args="$args -e \"set from=$OVPN_FROM_EMAIL\""
+    args="$args -a $client_config"
+    
+    bash -c "printf '%s' '$body' | mutt $args -- $email"
+fi
