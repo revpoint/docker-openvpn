@@ -30,7 +30,12 @@ if [ ! -f "$client_config" ]; then
     exit 1
 fi
 
-otp=$(ovpn_otp_user "$email" 2>&1)
+otp=$(ovpn_otp_user "$email")
+
+secret=$(printf '%s\n' "$otp" | grep "Your new secret key is:" | grep -oE "[A-Z0-9]{26}")
+qr_url=$(printf 'otpauth://totp/%s?secret=%s&issuer=%s' "$email" "$secret" "$OVPN_CN")
+qr_code=$(qrencode -t UTF8 $qr_url)
+
 
 if [ -n $OVPN_SMTP_URL ]; then
     subject="OpenVPN config for $OVPN_CN"
@@ -42,7 +47,7 @@ This email contains your OVPN configuration file.
 Use the following one-time password instructions with an authenticator app before connecting.
 EOF
 )
-    body=$(echo -e "$body\n\n$otp")
+    body=$(echo -e "$body\n\n$qr_code\n\n$otp")
 
     args=""
     args="$args -s \"$subject\""
