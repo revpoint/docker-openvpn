@@ -27,8 +27,8 @@ otp_dir=${OPENVPN:-}/otp
 if [ "$2" == "interactive" ]; then
     # Authenticator will ask for other parameters. User can choose rate limit, token reuse policy and time window policy
     # Always use time base OTP otherwise storage for counters must be configured somewhere in volume
-    google-authenticator --time-based --force -l "${1}" -i "${OVPN_CN}" -s "${opt_dir}/${1}.google_authenticator"
+    google-authenticator --time-based --force -l "${1}" -i "${OVPN_CN}" -s $otp_dir/$1.google_authenticator
 else
     google-authenticator --time-based --disallow-reuse --force --no-confirm --rate-limit=3 --rate-time=30 --window-size=3 \
-        -l "${1}" -i "${OVPN_CN}" -s "${opt_dir}/${1}.google_authenticator"
+        -l "${1}" -i "${OVPN_CN}" -s $otp_dir/$1.google_authenticator
 fi

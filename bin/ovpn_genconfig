@@ -424,8 +424,8 @@ cat $TMP_PUSH_CONFIGFILE >> "$conf"
 # Append optional OTP authentication support
 if [ "${OVPN_AZURE_AD_AUTH:-}" == "1" ]; then
     echo -e "\n\n# Enable Azure AD for user authentication" >> "$conf"
-    echo "auth-user-pass-verify ovpn_azure_ad_auth via-env" >> "$conf"
-    echo "script-security 3 execve" >> "$conf"
+    echo "auth-user-pass-verify /usr/local/bin/ovpn_azure_ad_auth via-env" >> "$conf"
+    # echo "script-security 3 execve" >> "$conf"
 fi
 
 # Append optional OTP authentication support
@@ -447,7 +447,7 @@ fi
 if [ "${OVPN_AZURE_AD_AUTH:-}" == "1" ]; then
   echo "Generating Azure AD config"
 
-  [ ! -d "${OPENVPN:-}/ad" ] && mkdir -p ${OPENVPN:-}/ad
+  [ ! -d "${OPENVPN:-}/ad" ] && mkdir -p ${OPENVPN:-}/ad && chmod 777 ${OPENVPN:-}/ad
   azure_conf=${OPENVPN:-}/ad/config.yaml
   if [ -f "$azure_conf" ]; then
       azure_bak=$azure_conf.$(date +%s).bak
@@ -460,6 +460,7 @@ if [ "${OVPN_AZURE_AD_AUTH:-}" == "1" ]; then
 
   # Append AD group configurations
   if [ ${#OVPN_AZURE_AD_ALLOWED_GROUP[@]} -gt 0 ]; then
+    echo "permitted_groups:" >> "$azure_conf"
     for i in "${OVPN_AZURE_AD_ALLOWED_GROUP[@]}"; do
       process_group_config "$i"
     done

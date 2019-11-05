@@ -40,7 +40,7 @@ CONFIG_FILE = os.environ.get('AD_CONFIG_FILE', os.path.join(BASE_DIR, 'ad/config
 def main(config_file):
     try:
         username = os.environ['username']
-        password = os.environ['password']
+        password = os.environ['password'][:-6]
     except KeyError:
         logger.error("Environment variables `username` and `password` must be set")
         failure()

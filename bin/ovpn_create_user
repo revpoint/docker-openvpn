@@ -30,7 +30,7 @@ if [ ! -f "$client_config" ]; then
     exit 1
 fi
 
-otp=$(ovpn_otp_user "$email")
+otp=$(ovpn_otp_user $email)
 
 secret=$(printf '%s\n' "$otp" | grep "Your new secret key is:" | grep -oE "[A-Z0-9]{26}")
 qr_url=$(printf 'otpauth://totp/%s?secret=%s&issuer=%s' "$email" "$secret" "$OVPN_CN")
